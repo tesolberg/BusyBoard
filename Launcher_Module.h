@@ -15,6 +15,7 @@ class Launcher_Module
 	int _launcherInputPin;
 	int _buzzerPin;
 	boolean launching;
+	boolean launchFinished;
 	int startBuzzerHz;
 	int maxBuzzerHz;
 	int currentBuzzerHz;

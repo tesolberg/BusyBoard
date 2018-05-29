@@ -3,14 +3,17 @@
 ///////////////////////
 
 /*
-To use the module instantiate a launcher module with the proper pin arguments and call its updateLauncherModule function in update.
+To use the module instantiate a launcher module with the proper pin arguments 
+and call its updateLauncherModule function in update. Add a delay of a few
+milliseconds to get tone to go from starting hz to max hz in the proper time.
 */
 
 #include "Arduino.h"
 #include "Launcher_Module.h"
 
-
-Launcher_Module::Launcher_Module(int launcherVccPin, int launcherInputPin, int buzzerPin)
+Launcher_Module::Launcher_Module(int launcherVccPin, 
+								 int launcherInputPin, 
+								 int buzzerPin)
 {
 	_launcherVccPin = launcherVccPin;
 	_launcherInputPin = launcherInputPin;
@@ -19,6 +22,7 @@ Launcher_Module::Launcher_Module(int launcherVccPin, int launcherInputPin, int b
 	startBuzzerHz = 0;
 	maxBuzzerHz = 1750;
 	currentBuzzerHz = startBuzzerHz;
+	launchFinished = false;
 
 	pinMode(launcherVccPin, OUTPUT);
 	pinMode(launcherInputPin, INPUT);
@@ -27,15 +31,14 @@ Launcher_Module::Launcher_Module(int launcherVccPin, int launcherInputPin, int b
 
 void Launcher_Module::runLaunch()
 {
-	if (launching)
+	if (launching && !launchFinished)
 	{
 		tone(_buzzerPin, currentBuzzerHz);
 		currentBuzzerHz++;
-		delay(5);
 
 		if (currentBuzzerHz > maxBuzzerHz)
 		{
-		launching = false;
+		launchFinished = true;
 		currentBuzzerHz = startBuzzerHz;
 		}
 	}
@@ -50,12 +53,20 @@ void Launcher_Module::runLaunch()
 
 void Launcher_Module::updateLauncherModule() 
 {
+	// Every other second.
 	if ((millis() / 1000) % 2 > 0)
 	{
+		// Turns on power to switch.
 		digitalWrite(_launcherVccPin, HIGH);
 
 		// LOW means user has toggled switch.
 		launching = (digitalRead(_launcherInputPin) == LOW);
+		
+		// If write is on but switch is off -> launchFinished set to false.
+		if (!launching)
+		{
+			launchFinished = false;
+		}
 	} 
 	else
 	{
